@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <meta name="theme-color" content="#070d12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Casa de Ladrones: un shooter sobre raíles para móvil. Aparta a la banda de El Barón antes de que vacíen el banco." />
+  <title>CASA DE LADRONES — House of the Robbers</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene" aria-label="Escena 3D del asalto al banco"></canvas>
+
+    <div class="screen-fx" aria-hidden="true">
+      <div class="grain"></div>
+      <div class="scanlines"></div>
+      <div class="vignette"></div>
+      <div class="damage-flash" id="damageFlash"></div>
+      <div class="hit-flash" id="hitFlash"></div>
+      <div class="speed-lines" id="speedLines"></div>
+    </div>
+
+    <section id="boot" class="boot" aria-live="polite">
+      <div class="boot-badge">
+        <span class="boot-siren"></span>
+        <b>DPD</b>
+        <small>DISTRITO 9</small>
+      </div>
+      <div class="boot-copy">
+        <span>PREPARANDO EL DISTRITO</span>
+        <div class="boot-track"><i></i></div>
+        <small id="bootStatus">CARGANDO TEXTURAS…</small>
+      </div>
+    </section>
+
+    <section id="menu" class="menu screen hidden" aria-labelledby="gameTitle">
+      <div class="menu-shade" aria-hidden="true"></div>
+
+      <header class="menu-top">
+        <div class="brandmark" aria-label="Departamento de Policía, Distrito 9">
+          <svg class="badge" viewBox="0 0 64 74" aria-hidden="true">
+            <path d="M32 2 60 12v24c0 17-12 28-28 36C16 64 4 53 4 36V12Z" fill="#f6e8cd"/>
+            <path d="M32 7 55 15v21c0 14-10 24-23 31C19 60 9 50 9 36V15Z" fill="#10212b"/>
+            <path d="M32 13 48 18v18c0 9-6 17-16 23-10-6-16-14-16-23V18Z" fill="#e95b35"/>
+            <path d="m32 20 3.4 7.1 7.8 1-5.7 5.5 1.4 7.7-6.9-3.7-6.9 3.7 1.4-7.7-5.7-5.5 7.8-1Z" fill="#f6e8cd"/>
+          </svg>
+          <div>
+            <small>POLICE DEPT.</small>
+            <b>DISTRITO 9</b>
+            <span><i class="live-dot"></i> 23:47 / EN SERVICIO</span>
+          </div>
+        </div>
+
+        <div class="menu-actions">
+          <button class="chip" id="soundToggle" type="button" aria-pressed="true">
+            <span class="chip-icon sound-on" aria-hidden="true"></span>
+            <span class="chip-label">SONIDO</span>
+            <b>ON</b>
+          </button>
+          <button class="chip" id="tiltToggle" type="button" aria-pressed="false" title="Activar inclinación del dispositivo">
+            <span class="chip-icon tilt-icon" aria-hidden="true"></span>
+            <span class="chip-label">TILT</span>
+            <b>OFF</b>
+          </button>
+        </div>
+      </header>
+
+      <div class="menu-body">
+        <div class="menu-copy">
+          <div class="kicker"><span></span> SHOOTER SOBRE RAÍLES <i>•</i> MÓVIL / TABLET <b class="rec-dot"></b></div>
+
+          <h1 id="gameTitle" class="logo" aria-label="Casa de Ladrones">
+            <span class="logo-top">HOUSE OF</span>
+            <span class="logo-main">THE<br/>ROBBERS</span>
+            <span class="logo-bottom">CASA DE LADRONES</span>
+          </h1>
+
+          <div class="title-rule" aria-hidden="true">
+            <span></span><b>23:47</b><i>DISTRITO 9</i><span></span>
+          </div>
+
+          <p class="premise">La banda de <b>El Barón</b> ha tomado el banco. Entra, apunta y aparta a los ladrones antes de que vacíen la cámara. <em>No dispares a los rehenes.</em></p>
+
+          <div class="cta-row">
+            <button id="startBtn" class="start-btn" type="button" aria-label="Start">
+              <span class="start-arrow" aria-hidden="true">▶</span>
+              <span class="start-copy"><b>START</b><small>INICIAR ASALTO</small></span>
+              <span class="start-code" aria-hidden="true">DPD-09</span>
+            </button>
+            <div class="best-block">
+              <small>MEJOR SERVICIO</small>
+              <b id="bestScore">000000</b>
+              <span id="bestRank">CADETE</span>
+            </div>
+          </div>
+
+          <div class="hints" aria-label="Controles">
+            <span class="hint"><i class="hint-icon drag" aria-hidden="true"></i><b>ARRASTRA</b> APUNTAR</span>
+            <span class="hint"><i class="hint-icon tap" aria-hidden="true"></i><b>TOCA</b> DISPARAR</span>
+            <span class="hint"><i class="hint-icon reload" aria-hidden="true"></i><b>R</b> RECARGAR</span>
+            <span class="hint tilt-hint"><i class="hint-icon tilt" aria-hidden="true"></i><b>TILT</b> OPCIONAL</span>
+          </div>
+        </div>
+
+        <aside class="case-file" aria-hidden="true">
+          <div class="case-tab">CASO #0917</div>
+          <div class="case-photo">
+            <span class="suspect-silhouette"></span>
+            <div class="scan-line"></div>
+            <b>SIN ROSTRO</b>
+            <small>BANDA DEL BARÓN</small>
+          </div>
+          <div class="case-data">
+            <span><i>DELITO</i><b>ROBO A MANO ARMADA</b></span>
+            <span><i>LUGAR</i><b>BANCO CENTRAL / D9</b></span>
+            <span><i>OBJETIVO</i><b>NEUTRALIZAR</b></span>
+          </div>
+          <div class="case-stamp">NO SALIDA</div>
+        </aside>
+      </div>
+
+      <footer class="menu-footer">
+        <div class="warning-tape" aria-hidden="true">POLICE LINE DO NOT CROSS&nbsp;&nbsp;•&nbsp;&nbsp;POLICE LINE DO NOT CROSS&nbsp;&nbsp;•&nbsp;&nbsp;POLICE LINE DO NOT CROSS</div>
+        <div class="footer-note"><span>LOW POLY</span><i></i><span>HIGH HEAT</span><b>v1.0</b></div>
+      </footer>
+
+      <div class="rotate-note" aria-hidden="true"><span>↻</span> GIRA EL MÓVIL PARA MÁS CAMPO DE VISIÓN</div>
+    </section>
+
+    <section id="hud" class="hud hidden" aria-label="Interfaz de juego">
+      <div class="hud-top">
+        <div class="hud-left">
+          <div class="score-panel">
+            <span class="panel-label">PUNTOS</span>
+            <b id="score">000000</b>
+            <div class="combo" id="combo"><i>x2</i><span>COMBO</span></div>
+          </div>
+          <div class="health-panel">
+            <div class="health-head"><span>OFICIAL</span><b id="healthText">100</b></div>
+            <div class="health-track"><i id="healthBar"></i><em></em></div>
+            <span class="health-sub" id="healthState">ESTABLE</span>
+          </div>
+        </div>
+
+        <div class="wave-panel">
+          <small id="zoneLabel">MOTEL AZUL</small>
+          <div class="wave-line"><i></i><b id="waveLabel">OLEADA 01</b><i></i></div>
+          <div class="wave-pips" id="wavePips" aria-label="Ladrones restantes"></div>
+        </div>
+
+        <div class="hud-right">
+          <button id="pauseBtn" class="icon-btn" type="button" aria-label="Pausa"><span></span><span></span></button>
+          <button id="recenterBtn" class="tilt-status hidden" type="button" aria-label="Centrar inclinación">◎ <b>CENTRAR</b></button>
+          <div class="tilt-status" id="tiltStatus"><i></i><span>TILT OFF</span></div>
+        </div>
+      </div>
+
+      <div class="boss-panel hidden" id="bossPanel">
+        <div class="boss-head"><span>OBJETIVO PRIORITARIO</span><b>EL BARÓN</b></div>
+        <div class="boss-track"><i id="bossBar"></i></div>
+      </div>
+
+      <div class="objective" id="objective">
+        <span class="obj-icon">!</span>
+        <div><small>OBJETIVO</small><b id="objectiveText">APARTA A LA BANDA</b></div>
+      </div>
+
+      <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+      <div class="wave-banner" id="waveBanner" aria-live="polite">
+        <div class="banner-top"><span></span><b id="bannerKicker">OLEADA 01</b><span></span></div>
+        <strong id="bannerTitle">MOTEL AZUL</strong>
+        <small id="bannerSub">LA BANDA ESTÁ DENTRO</small>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="ammo-panel">
+          <div class="ammo-head"><span>MUNICIÓN</span><b><i id="ammoNow">12</i><em>/12</em></b></div>
+          <div class="ammo-pips" id="ammoPips"></div>
+          <button id="reloadBtn" class="reload-btn" type="button" aria-label="Recargar">
+            <span class="reload-icon"></span><b>RECARGAR</b><small>R</small>
+          </button>
+          <div class="reload-track"><i id="reloadBar"></i></div>
+        </div>
+
+        <div class="control-hint" id="controlHint"><b>ARRASTRA</b> para apuntar <span>•</span> <b>TOCA</b> para disparar</div>
+
+        <button id="fireBtn" class="fire-btn" type="button" aria-label="Disparar">
+          <span class="fire-ring"></span>
+          <span class="fire-cross" aria-hidden="true"></span>
+          <b>FUEGO</b>
+          <small>MANTÉN</small>
+        </button>
+      </div>
+
+      <div id="reticle" class="reticle" aria-hidden="true">
+        <span class="ret-corner tl"></span><span class="ret-corner tr"></span>
+        <span class="ret-corner bl"></span><span class="ret-corner br"></span>
+        <span class="ret-dot"></span>
+        <span class="ret-ring"></span>
+        <span class="ret-label">DPD-9</span>
+      </div>
+      <div id="hitMarker" class="hit-marker" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div id="bustedLayer" class="busted-layer" aria-hidden="true"></div>
+
+      <div class="low-ammo" id="lowAmmo" aria-hidden="true">RECARGA</div>
+      <div class="damage-numbers" id="damageLayer" aria-hidden="true"></div>
+    </section>
+
+    <section id="pauseScreen" class="overlay screen hidden" aria-labelledby="pauseTitle">
+      <div class="overlay-card pause-card">
+        <span class="overlay-kicker">SERVICIO EN PAUSA</span>
+        <h2 id="pauseTitle">ALTO EL FUEGO</h2>
+        <p>Respira. La banda no se va a ninguna parte.</p>
+        <div class="pause-stats">
+          <div><small>PUNTOS</small><b id="pauseScore">000000</b></div>
+          <div><small>PRECISIÓN</small><b id="pauseAccuracy">0%</b></div>
+          <div><small>OLEADA</small><b id="pauseWave">1/4</b></div>
+        </div>
+        <button id="resumeBtn" class="menu-btn primary" type="button">SEGUIR <span>▶</span></button>
+        <button id="pauseTiltBtn" class="menu-btn" type="button">INCLINACIÓN: OFF</button>
+        <button id="restartBtn" class="menu-btn subtle" type="button">REINICIAR ASALTO</button>
+        <button id="quitBtn" class="menu-btn subtle" type="button">VOLVER AL MENÚ</button>
+      </div>
+    </section>
+
+    <section id="endScreen" class="overlay screen hidden" aria-labelledby="endTitle">
+      <div class="overlay-card end-card">
+        <span class="overlay-kicker" id="endKicker">PARTE DE INCIDENCIAS</span>
+        <h2 id="endTitle">TE HAN TUMBADO</h2>
+        <p id="endText">La banda sigue dentro. El Distrito 9 necesita otra ronda.</p>
+        <div class="rank-stamp" id="rankStamp"><small>RANGO</small><b id="rankLetter">D</b></div>
+        <div class="end-stats">
+          <div><small>PUNTOS</small><b id="endScore">000000</b></div>
+          <div><small>PRECISIÓN</small><b id="endAccuracy">0%</b></div>
+          <div><small>BAJAS</small><b id="endKills">0</b></div>
+          <div><small>MEJOR COMBO</small><b id="endCombo">x1</b></div>
+        </div>
+        <div class="new-best hidden" id="newBest">¡NUEVO RÉCORD DE SERVICIO!</div>
+        <button id="retryBtn" class="menu-btn primary" type="button">REINTENTAR <span>↻</span></button>
+        <button id="endMenuBtn" class="menu-btn subtle" type="button">VOLVER AL MENÚ</button>
+      </div>
+    </section>
+
+    <div id="rotateOverlay" class="rotate-overlay hidden" aria-hidden="true">
+      <div class="phone-icon"><span></span></div>
+      <b>MEJOR EN HORIZONTAL</b>
+      <small>Gira tu dispositivo</small>
+    </div>
+
+    <div id="unsupported" class="unsupported hidden">
+      <b>WEBGL NO DISPONIBLE</b>
+      <span>Este dispositivo no puede abrir la escena 3D. Prueba con otro navegador.</span>
+    </div>
+  </div>
+
+  <noscript>Este juego necesita JavaScript.</noscript>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
